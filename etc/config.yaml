@@ -2,8 +2,9 @@ Name: apk-landing
 Host: 0.0.0.0
 Port: 5001
 
-# 路由前缀：公网经反向代理以 /ulink 转发到本服务时填 /ulink；本地直连可留空
-URLPrefix: /ulink
+# 路由前缀：nginx 用 proxy_pass 带尾斜杠会剥掉 /ulink，后端收到的路径已无前缀，故留空。
+# 若改用「不带尾斜杠」的透传写法（后端能收到 /ulink），再填 /ulink。
+URLPrefix: ""
 
 # 京东 App 落地页配置
 JD:

@@ -43,8 +43,15 @@ func main() {
 	// 路由前缀：公网经反向代理以 /ulink 前缀转发到本服务时，路由需带同样前缀。
 	prefix := strings.TrimRight(c.URLPrefix, "/")
 
-	// 京东落地页：新路径 + 兼容旧投放链接的别名
-	for _, path := range []string{"/jd/landing", "/jd_apk/index3.html"} {
+	// 京东落地页：注册多个路径别名，覆盖常见写法（带不带 jd.html 都能直接打开）。
+	// 注意：公网 /ulink 前缀由 nginx 剥离，此处不含 /ulink。
+	landingPaths := []string{
+		"/jd/landing",
+		"/jd/landing/jd.html",
+		"/jd/landing/index.html",
+		"/jd_apk/index3.html",
+	}
+	for _, path := range landingPaths {
 		server.AddRoute(rest.Route{
 			Method:  http.MethodGet,
 			Path:    prefix + path,
