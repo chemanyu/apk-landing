@@ -5,8 +5,9 @@ import "github.com/zeromicro/go-zero/rest"
 // Config 项目总配置
 type Config struct {
 	rest.RestConf
-	JD       JDAppConfig    // 京东 App 落地页配置
-	Fallback FallbackConfig // 唤端兜底策略
+	URLPrefix string `json:",optional"` // 路由前缀（如 /ulink），用于公网反代部署；空则无前缀
+	JD        JDAppConfig    // 京东 App 落地页配置
+	Fallback  FallbackConfig // 唤端兜底策略
 }
 
 // JDAppConfig 京东 App 相关配置。

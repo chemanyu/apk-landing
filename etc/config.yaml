@@ -1,6 +1,9 @@
 Name: apk-landing
 Host: 0.0.0.0
-Port: 8888
+Port: 5001
+
+# 路由前缀：公网经反向代理以 /ulink 转发到本服务时填 /ulink；本地直连可留空
+URLPrefix: /ulink
 
 # 京东 App 落地页配置
 JD:

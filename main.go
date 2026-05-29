@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
@@ -39,11 +40,14 @@ func main() {
 
 	landingHandler := handler.NewLandingHandler(landingSvc, tmpl)
 
+	// 路由前缀：公网经反向代理以 /ulink 前缀转发到本服务时，路由需带同样前缀。
+	prefix := strings.TrimRight(c.URLPrefix, "/")
+
 	// 京东落地页：新路径 + 兼容旧投放链接的别名
 	for _, path := range []string{"/jd/landing", "/jd_apk/index3.html"} {
 		server.AddRoute(rest.Route{
 			Method:  http.MethodGet,
-			Path:    path,
+			Path:    prefix + path,
 			Handler: landingHandler.Handle,
 		})
 	}
@@ -51,7 +55,7 @@ func main() {
 	// 健康检查
 	server.AddRoute(rest.Route{
 		Method: http.MethodGet,
-		Path:   "/ping",
+		Path:   prefix + "/ping",
 		Handler: func(w http.ResponseWriter, r *http.Request) {
 			httpx.OkJson(w, map[string]string{"status": "ok"})
 		},
