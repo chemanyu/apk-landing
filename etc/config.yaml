@@ -17,6 +17,11 @@ Log:
 # 若改用「不带尾斜杠」的透传写法（后端能收到 /ulink），再填 /ulink。
 URLPrefix: ""
 
+# 关掉 go-zero 框架自带的 [HTTP] 访问日志中间件，只保留我们自己的结构化业务日志，
+# 避免同一次访问打两条、access.log 混乱。
+Middlewares:
+  Log: false
+
 # 京东 App 落地页配置
 JD:
   Pkg: "com.jingdong.app.mall"

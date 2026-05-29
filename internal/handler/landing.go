@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/rest/httpx"
@@ -77,13 +78,18 @@ func (h *LandingHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-// clientIP 取真实客户端 IP，优先信任反向代理传的头（nginx 已配 X-Real-IP / X-Forwarded-For）。
+// clientIP 取真实客户端 IP。
+// 经多层代理时 X-Forwarded-For 形如 "真实IP, 代理1, 代理2"，取第一个；
+// X-Real-IP 在多层代理下可能是上游内网 IP，故优先用 XFF 的首个。
 func clientIP(r *http.Request) string {
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		if i := strings.IndexByte(xff, ','); i >= 0 {
+			return strings.TrimSpace(xff[:i])
+		}
+		return strings.TrimSpace(xff)
+	}
 	if ip := r.Header.Get("X-Real-IP"); ip != "" {
 		return ip
-	}
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		return xff // 可能是逗号分隔的链路，首个为最初客户端
 	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
