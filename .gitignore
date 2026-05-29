@@ -1,3 +1,5 @@
 apk-landing
 logs/
 *.log
+dist-linux/
+dist/
