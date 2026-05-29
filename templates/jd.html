@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>京东自营超值福利</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <script>
+    // rem 适配（同参考页）
+    (function (doc, win) {
+      var docEl = doc.documentElement,
+        resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize',
+        recalc = function () {
+          var clientWidth = docEl.clientWidth;
+          if (!clientWidth) return;
+          docEl.style.fontSize = (clientWidth >= 750 ? clientWidth / 3.75 : 100 * (clientWidth / 375)) + 'px';
+        };
+      if (!doc.addEventListener) return;
+      win.addEventListener(resizeEvt, recalc, false);
+      doc.addEventListener('DOMContentLoaded', recalc, false);
+    })(document, window);
+  </script>
+  <style>
+    * { margin: 0; padding: 0; }
+    body { position: relative; font-size: 0.16rem; }
+    #main { width: 100%; height: 100%; }
+    .bgImg { width: 100%; display: block; }
+    .click {
+      position: fixed; left: 0; right: 0; bottom: 0.5rem;
+      z-index: 100; width: 70%; margin: auto;
+      -webkit-animation: tempShow 1.6s infinite; animation: tempShow 1.6s infinite;
+    }
+    @keyframes tempShow {
+      0% { transform: scale(1); }
+      25% { transform: scale(1.2); }
+      50% { transform: scale(1); }
+      75% { transform: scale(1.2); }
+    }
+  </style>
+</head>
+<body>
+  <div id="main">
+    <img class="bgImg" id="bgImg" src="{{.BgImg}}">
+    <img class="click" id="clickBtn" src="{{.ClickImg}}">
+  </div>
+
+  <!-- 服务端注入的落地页配置 -->
+  <script id="cfg" type="application/json">{{.ConfigJSON}}</script>
+
+  <script>
+    (function () {
+      var cfg = JSON.parse(document.getElementById('cfg').textContent);
+      var hidden = false;
+
+      // 页面被切走（App 被成功唤起）时标记
+      function watchVisibility() {
+        var prop = 'hidden' in document ? 'visibilitychange'
+                 : 'webkitHidden' in document ? 'webkitvisibilitychange' : null;
+        if (!prop) return;
+        document.addEventListener(prop, function () {
+          if (document.hidden || document.webkitHidden) hidden = true;
+        });
+      }
+
+      // 触发 deeplink（隐藏 a 标签点击，兼容性优于直接改 location）
+      function fireDeepLink(url) {
+        var a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        document.body.appendChild(a);
+        a.click();
+      }
+
+      // 计算兜底地址：装了 App → 唤端成功；没装 → 跳商店/下载
+      function pickFallback() {
+        var ua = navigator.userAgent;
+        var isAndroid = /Android/i.test(ua);
+        var isiOS = /iPhone|iPad|iPod/i.test(ua);
+
+        if (isiOS) return cfg.iosAppStore;
+        if (!isAndroid) return cfg.apk; // 其他平台默认下 APK
+
+        // Android 按厂商选应用市场
+        var vendor = null;
+        if (/HUAWEI|HONOR/i.test(ua)) vendor = 'huawei';
+        else if (/XiaoMi|MI |Redmi|HarmonyOS.*Mi/i.test(ua) || /\bMI\b/i.test(ua)) vendor = 'xiaomi';
+        else if (/vivo/i.test(ua)) vendor = 'vivo';
+        else if (/OPPO|PACM|PBAM|PCTM/i.test(ua)) vendor = 'oppo';
+        else if (/samsung|SM-/i.test(ua)) vendor = 'samsung';
+
+        var tpl = vendor && cfg.vendorStores ? cfg.vendorStores[vendor] : null;
+        if (tpl) return tpl.replace('{pkg}', cfg.pkg);
+        return cfg.apk; // 未识别厂商 → 直接下 APK
+      }
+
+      // 唤端主流程：先唤起 deeplink，DelayMs 后仍未切走则跳兜底
+      function launch() {
+        var fallback = pickFallback();
+        watchVisibility();
+
+        if (cfg.deepLink) {
+          fireDeepLink(cfg.deepLink);
+          setTimeout(function () {
+            if (!hidden && document.visibilityState !== 'hidden') {
+              window.location.href = fallback;
+            }
+          }, cfg.delayMs || 1000);
+        } else {
+          window.location.href = fallback;
+        }
+      }
+
+      // 进页面即尝试唤端；同时点击页面任意处可重试
+      document.addEventListener('DOMContentLoaded', launch);
+      document.getElementById('main').addEventListener('click', launch);
+    })();
+  </script>
+</body>
+</html>
