@@ -4,14 +4,14 @@ After=network.target
 
 [Service]
 Type=simple
-# 部署目录，按实际路径修改
-WorkingDirectory=/opt/apk-landing
-ExecStart=/opt/apk-landing/apk-landing -f /opt/apk-landing/etc/config.yaml
+# 部署目录
+WorkingDirectory=/home/sysadmin/data/apk-landing/dist-linux
+ExecStart=/home/sysadmin/data/apk-landing/dist-linux/apk-landing -f /home/sysadmin/data/apk-landing/dist-linux/etc/config.yaml
 Restart=always
 RestartSec=3
-# 以普通用户运行更安全，按需修改；监听 5001 非特权端口无需 root
-User=www-data
-Group=www-data
+# 运行用户，监听 5001 非特权端口无需 root
+User=sysadmin
+Group=sysadmin
 # 日志走 journald，用 journalctl -u apk-landing 查看
 StandardOutput=journal
 StandardError=journal
