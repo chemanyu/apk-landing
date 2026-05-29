@@ -2,6 +2,17 @@ Name: apk-landing
 Host: 0.0.0.0
 Port: 5001
 
+# 日志配置（go-zero logx）
+# Mode: file 落地到文件 / console 输出到终端(systemd 用 journalctl 看)
+# file 模式下日志写到 Path 目录：access.log / error.log / stat.log / severe.log
+Log:
+  Mode: file
+  Path: logs
+  Level: info
+  Encoding: json     # json 便于后续按字段检索；想人读改成 plain
+  KeepDays: 14       # 日志保留天数，自动清理
+  Compress: true
+
 # 路由前缀：nginx 用 proxy_pass 带尾斜杠会剥掉 /ulink，后端收到的路径已无前缀，故留空。
 # 若改用「不带尾斜杠」的透传写法（后端能收到 /ulink），再填 /ulink。
 URLPrefix: ""
