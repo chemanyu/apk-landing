@@ -71,9 +71,31 @@ sudo systemctl enable --now apk-landing
 sudo systemctl status apk-landing      # 看状态
 sudo systemctl restart apk-landing     # 改配置后重启
 sudo systemctl stop apk-landing        # 停止
-journalctl -u apk-landing -f           # 实时看日志
-journalctl -u apk-landing --since "10 min ago"
+journalctl -u apk-landing -f           # 看服务进程输出（启动报错等；业务日志见下方）
 ```
+
+### 1.4.1 业务日志
+
+日志由 `etc/config.yaml` 的 `Log` 段控制，默认 `Mode: file`，写到**运行目录下的 `logs/`**
+（即 `dist-linux/logs/`，因 systemd `WorkingDirectory` 指向 dist-linux）。
+
+```bash
+cd /home/sysadmin/data/apk-landing/dist-linux
+
+tail -f logs/access.log | grep jd_landing_visit          # 实时看落地页访问
+grep -c jd_landing_visit logs/access.log                 # 今日访问量
+tail -1 logs/access.log | grep jd_landing_visit | jq .   # 看单条结构（需 jq）
+```
+
+每条 `jd_landing_visit` 业务日志字段：`client_ip`（真实访客 IP，取 X-Forwarded-For 首个）、
+`ua`、`jd_url`（解码后京东 CPS 链接）、`media`（拆出的 rtaId/site/adPlanId 等媒体参数）、
+`deep_link`（下发的唤端地址）、`trace`/`span`（链路 ID）。
+
+日志文件分级：`access.log`(info+业务) / `error.log` / `severe.log` / `slow.log` / `stat.log`。
+`KeepDays: 14` 自动清理过期日志。
+
+> 已通过 `Middlewares.Log: false` 关掉框架自带的 `[HTTP]` 访问日志，避免和业务日志混在一起。
+> 若想改回输出到 journald（用 `journalctl` 看），把 `Log.Mode` 改成 `console`。
 
 ### 1.5 配 nginx（在服务器上）
 

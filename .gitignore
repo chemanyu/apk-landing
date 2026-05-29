@@ -3,3 +3,6 @@ logs/
 *.log
 dist/
 *.bak.*
+
+# Session logs (shipping-dev skill) — personal per-dev, not shared via git
+docs/engineering/session*.md
